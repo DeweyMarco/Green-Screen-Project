@@ -8,7 +8,8 @@ def is_green(rgb):
     r = rgb[0]
     g = rgb[1]
     b = rgb[2]
-    if (g > 150 and b < 20):
+    # if ((r-g)>50 && (r-b)>50) 
+    if ((r - g) > 50 and (r - b) > 50):
         return True
     else:
         return False
