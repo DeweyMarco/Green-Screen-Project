@@ -3,17 +3,6 @@ import cv2
 import sys
 import datetime
 
-# Function to check if a given RGB value corresponds to a green color
-def is_green(rgb):
-    r = rgb[0]
-    g = rgb[1]
-    b = rgb[2]
-    # if ((r-g)>50 && (r-b)>50) 
-    if ((r - g) > 50 and (r - b) > 50):
-        return True
-    else:
-        return False
-
 # Function to crop the center of the large image to match the size of the small image
 def crop(small, large, suffix):
     img_large = cv2.imread(large)
@@ -34,22 +23,30 @@ def crop(small, large, suffix):
 # Function to convert green pixels to black and non-green pixels to white
 def remove_green(green, suffix):
     img = cv2.imread(green)
+    
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    kernel = np.ones((5, 5), np.uint8)
+    
+    lower = np.array([50, 100, 50]) 
+    # lower = np.array([52, 0, 55]) 
+    upper = np.array([70, 255, 255]) 
+    # upper = np.array([104, 255, 255]) 
+    
+    mask = cv2.inRange(hsv, lower, upper)
+    # mask = cv2.erode(mask, kernel, iterations=1) 
+    # mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel) 
+    # mask = cv2.dilate(mask, kernel, iterations=1) 
+    
+    mask = cv2.bitwise_not(mask)
 
     black = np.array([0,0,0])
     white = np.array([255,255,255])
-
-    for i in range(len(img)):
-        for j in range(len(img[i])):
-            if (is_green(img[i][j])):
-                img[i][j] = black
-            else:
-                img[i][j] = white
 
     # Create a new filename for the black and white image
     black_and_white = "masks/" + "black_and_white_" + suffix + ".jpg"
     
     # Save the black and white image
-    save = cv2.imwrite(black_and_white, img)
+    save = cv2.imwrite(black_and_white, mask)
     return black_and_white
 
 # Function to combine the black and white mask with the new image
@@ -58,12 +55,9 @@ def add_new_image(baw, green, new_img, filename):
     new = cv2.imread(new_img)
     green = cv2.imread(green)
 
-    black = np.array([0,0,0])
-    white = np.array([255,255,255])
-
     for i in range(len(green)):
         for j in range(len(green[i])):
-            if (is_green(green[i][j])):
+            if (img[i][j][0] != 255):
                 green[i][j] = new[i][j]
                 
     # Create a new filename for the output image
